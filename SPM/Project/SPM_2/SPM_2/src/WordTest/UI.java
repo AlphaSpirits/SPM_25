@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
+import javax.lang.model.SourceVersion;
 import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -19,6 +20,7 @@ public class UI extends javax.swing.JFrame {
     ArrayList<Integer> Cnc = new ArrayList<Integer>();
     ArrayList<Integer> lineNumber = new ArrayList<Integer>();
     ArrayList<String> programStatement = new ArrayList<String>();
+    ArrayList<Integer> lineComplexity = new ArrayList<Integer>();
     int maxCases = 0;
 
     public UI() {
@@ -76,7 +78,7 @@ public class UI extends javax.swing.JFrame {
 
             //******************************IF uploded source code in JAVA language
             if (btnjava.isSelected()) {
-                if (scannedline.contains("System.out.println") || scannedline.startsWith("//") || (scannedline.startsWith("/*")) || scannedline.startsWith("*/")) {
+                if (scannedline.contains("System.out.println") || scannedline.contains("\\") || scannedline.startsWith("//") || (scannedline.startsWith("/*")) || scannedline.startsWith("*/")) {
                     CtcCounter = 0;
                     //continue;
                 } else if (scannedline.contains("if")) {
@@ -138,7 +140,7 @@ public class UI extends javax.swing.JFrame {
             } //******************************IF uploded source code in C++ language
             else if (btnc.isSelected()) {
 
-                if (scannedline.contains("cout <<") || scannedline.startsWith("//") || (scannedline.startsWith("/*")) || scannedline.startsWith("*/")) {
+                if (scannedline.contains("cout <<") || scannedline.contains("\\") || scannedline.startsWith("//") || (scannedline.startsWith("/*")) || scannedline.startsWith("*/")) {
                     CtcCounter = 0;
                     //continue;
                 } else if (scannedline.contains("if")) {
@@ -272,6 +274,214 @@ public class UI extends javax.swing.JFrame {
         return programStatement;
     }
 
+    public ArrayList<Integer> calcCs() {
+
+        String fileInput = uploadedContent.getText();
+
+        //ArrayList<Integer> lineComplexity = new ArrayList<Integer>();
+        ArrayList<String> variableList = new ArrayList<String>();
+        ArrayList<String> arrayToStoreBrackets = new ArrayList<String>();
+        int countComplexity = 0;
+        String operatorsCs1[] = {
+            "+", "-", "*", "/", "%", "++", "--",
+            "==", "!=", ">", "<", ">=", "<=",
+            "&&", "||", "!",
+            "|", "^", "~", "<<", ">>", ">>>", "<<<",
+            ",", "->", ".", "::",
+            "+=", "-=", "*=", "/=", "=", ">>>=", "|=", "&=", "%=", "<<=", ">>=", "^="
+        };
+        String cPlusPlusKeywords[] = {
+            "printf", "cout", "cin", "include",
+            "alignas", "alignof", "and_eq", "asm", "atomic_cancel", "atomic_commit",
+            "atomic_noexcept", "bitand", "bitor", "compl", "concept", "consteval",
+            "constexpr", "const_cast", "co_await", "co_return", "co_yield", "decltype",
+            "dynamic_cast", "explicit", "export", "extern", "friend", "inline", "mutable",
+            "noexcept", "not_eq", "nullptr", "operator", "or_eq", "reinterpret_cast",
+            "requires", "signed", "sizeof", "static_assert", "static_cast", "struct",
+            "template", "thread_local", "typedef", "typeid", "typename", "union",
+            "unsigned", "using", "virtual", "wchar_t", "xor", "xor_eq"
+        };
+        String manipulators[] = {"endl", "\n"};
+
+        String dataTypesToFindVariables[] = {
+            "int", "Integer", "long", "float", "String", "void"
+        };
+
+        String allExceptions[] = {
+            "ArithmeticException", "ArrayIndexOutOfBoundsException", "ClassNotFoundException", "FileNotFoundException", "IOException",
+            "InterruptedException", "NoSuchFieldException", "NoSuchMethodException", "NullPointerException", "NumberFormatException",
+            "RuntimeException", "StringIndexOutOfBoundsException"
+        };
+
+        String[] line = fileInput.split("\r\n|\r|\n");
+
+        //find variables
+        for (int v = 0; v < line.length; v++) {
+
+            String[] wordsForVariables = line[v].split(" ");
+            for (int r = 0; r < wordsForVariables.length; r++) {
+                for (int dataType = 0; dataType < dataTypesToFindVariables.length; dataType++) {//if variable is after data type
+                    if (wordsForVariables[r].equals(dataTypesToFindVariables[dataType])) {
+                        String idVariable = wordsForVariables[r + 1];
+                        if (!idVariable.contains("(")) {//variable but not a method name
+                            variableList.add(idVariable);//add to variable list
+                        }
+                    }
+                }
+                if (wordsForVariables[r].contains("(")) {//if variable is after data type which belongs to word with brackets
+
+                    int indexOfBrack = wordsForVariables[r].indexOf("(");
+                    int fistIndexAfterBrack = indexOfBrack + 1;
+                    String variableName = wordsForVariables[r].substring(fistIndexAfterBrack);
+
+                    for (int dataType = 0; dataType < dataTypesToFindVariables.length; dataType++) {
+                        if (variableName.equals(dataTypesToFindVariables[dataType])) {//check if the word is data type
+                            String variable = wordsForVariables[r + 1];
+                            if (!variable.contains("[")) {//if variable is not an array
+                                //variableList.add(variable);
+                                if (variable.endsWith(")")) {
+                                    int index1 = variable.lastIndexOf(')');//get last occured index of )
+                                    String variableWithoutBracketAtEnd = variable.substring(0, index1);
+                                    variableList.add(variableWithoutBracketAtEnd);
+                                } else {
+                                    variableList.add(variable);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < line.length; i++) {
+            String newString = line[i].trim(); //remove white spaces first occured
+            if (newString.startsWith("/") || newString.startsWith("*")) {//set lines with comments to 0 Cs
+                countComplexity = 0;
+            } else {
+                String[] words = line[i].split(" ");
+                for (int r = 0; r < words.length; r++) {
+
+                    if (SourceVersion.isKeyword(words[r])) {//java keywords
+                        countComplexity = countComplexity + 1;
+                    }
+                    if (words[r].equals("public") || words[r].equals("static") || words[r].equals("else") || words[r].equals("try") || words[r].equals("return")) {
+                        countComplexity = countComplexity - 1;
+                    }
+                    if (words[r].equals("new") || words[r].equals("delete") || words[r].equals("throw") || words[r].equals("throws")) {
+                        countComplexity = countComplexity + 1;
+                    }
+                    if (words[r].contains("System") && words[r].contains("out")) {// System and out
+                        countComplexity = countComplexity + 2;
+                    }
+                    if (words[r].contains(".")) {//if . contains in a word like sout
+                        char[] chWords = words[r].toCharArray();
+                        for (int m = 0; m < chWords.length; m++) {
+                            if (chWords[m] == '.') {
+                                countComplexity = countComplexity + 1;
+                            }
+                        }
+                    }
+                    if (words[r].startsWith("&") || words[r].startsWith("*")) {//reference and dereference operator
+                        char[] ch = words[r].toCharArray();
+                        if (ch.length > 1) {
+                            countComplexity = countComplexity + 2;
+                        }
+                    }
+                    if (words[r].matches(".*\\d.*")) {//check if the value is a number
+                        countComplexity = countComplexity + 1;
+                    }
+                    if (words[r].contains("(")) {//if method/object or word within double quotes
+                        //Cs for method
+                        int indexOfBrack = words[r].indexOf("(");
+                        String mn = words[r].substring(0, indexOfBrack);
+                        if (!mn.equals(null) && !mn.isEmpty()) {//if method name exists
+                            countComplexity = countComplexity + 1;
+                        }
+
+                        int indexOfBracket = words[r].indexOf("(");
+                        int indexOfQuote = indexOfBracket + 2;
+                        String wordWithQuote = words[r].substring(0, indexOfQuote);
+
+                        if (wordWithQuote.contains("\"")) {//words within double quotes 
+                            countComplexity = countComplexity + 1;
+                        }
+                        //Cs for data types with brackets -- ex: (long)
+                        int fistIndexAfterBracket = indexOfBracket + 1;
+                        String dataTypeName = words[r].substring(fistIndexAfterBracket);
+                        for (int dataType = 0; dataType < dataTypesToFindVariables.length; dataType++) {
+                            if (dataTypeName.contains(dataTypesToFindVariables[dataType])) {//check if the word is data type
+                                countComplexity = countComplexity + 1;
+                            }
+                        }
+                    }
+                    if (words[r].startsWith("\"")) {//words within double quotes seperately
+                        if (!words[r + 1].equals("+")) {
+                            countComplexity = countComplexity + 1;
+                        }
+                    }
+                    if (words[r].contains("[")) {//if array
+                        countComplexity = countComplexity + 1;
+                    }
+                    for (int cp = 0; cp < cPlusPlusKeywords.length; cp++) {//check if c++ keywords
+                        if (words[r].equals(cPlusPlusKeywords[cp])) {
+                            countComplexity = countComplexity + 1;
+                        }
+                    }
+                    for (int opCs1 = 0; opCs1 < operatorsCs1.length; opCs1++) {//according to operators with Cs 1
+                        if (words[r].equals(operatorsCs1[opCs1])) {
+                            countComplexity = countComplexity + 1;
+                        }
+                    }
+                    if (words[r].contains("++") || words[r].contains("--")) { //if words contain ++ or --
+                        countComplexity = countComplexity + 1;
+                    }
+                    for (int ex = 0; ex < allExceptions.length; ex++) { //exceptions occurs
+                        if (words[r].contains(allExceptions[ex])) {
+                            countComplexity = countComplexity + 1;
+                            if (words[r].startsWith("catch") || words[r - 1].equals("catch")) {// check for e --ex: catch(FileNotFoundException e) or catch
+                                countComplexity = countComplexity + 1;
+                            }
+                        }
+                    }
+                    if (words[r].equals("throw")) {//if throw e
+                        if (words[r + 1].startsWith("e") && words[r + 1].endsWith("e;")) {
+                            countComplexity = countComplexity + 1;
+                        }
+                    }
+                    if (words[r].contains("e.")) {//if contains e.--ex:e.getM()--here 2 because of method attach to it
+                        countComplexity = countComplexity + 2;
+                    }
+                    if (words[r].startsWith("catch") && words[r].endsWith(")")) {//if catch within a word -- ex: catch(FileNotFoundException e) 
+                        countComplexity = countComplexity + 1;
+                    }
+                    for (int manip = 0; manip < manipulators.length; manip++) {//check if the value is a manipulator
+                        if (words[r].equals(manipulators[manip])) {
+                            countComplexity = countComplexity + 1;
+                        }
+                    }
+                    for (int vl = 0; vl < variableList.size(); vl++) {//check if variable
+                        String var = variableList.get(vl);
+                        if (words[r].contains(var)) {
+                            countComplexity = countComplexity + 1;
+                        }
+                    }
+                    if (words[r].equals("new")) {//for class names -- ex: FileReader f = new ....
+                        countComplexity = countComplexity + 1;
+                    }
+
+                }
+            }
+            lineComplexity.add(countComplexity);
+            countComplexity = 0;
+        }
+//        result.append("Measuring the complexity of a program statement due to size (Cs) \n");
+//        for(int l=0; l<lineComplexity.size(); l++){
+//                result.append("line "+l+" ---- "+lineComplexity.get(l) + " \n");
+//            }
+        return (lineComplexity);
+
+    }
+
     public void viewResult() {
         readFile();
         DefaultTableModel model = (DefaultTableModel) result.getModel();
@@ -279,10 +489,14 @@ public class UI extends javax.swing.JFrame {
         Object[] CncObjs = Cnc.toArray();
         Object[] programStatementObjs = programStatement.toArray();
         Object[] lineNumberObjs = lineNumber.toArray();
+        Object[] lineComplexityObjs = lineComplexity.toArray();
+
         model.addColumn("Line No", lineNumberObjs);
         model.addColumn("Program Statements", programStatementObjs);
+        model.addColumn("Cs", lineComplexityObjs);
         model.addColumn("Ctc", CtcObjs);
         model.addColumn("Cnc", CncObjs);
+
     }
 
     @SuppressWarnings("unchecked")
@@ -511,14 +725,15 @@ public class UI extends javax.swing.JFrame {
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnCtc, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnCi, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnCnc, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnCi1, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnCi2, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnCi3, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnCs, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btnCtc, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(btnCi, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnCnc, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnCi1, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnCi2, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnCi3, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnCs, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
 
@@ -687,7 +902,7 @@ public class UI extends javax.swing.JFrame {
     }//GEN-LAST:event_testArrayListActionPerformed
 
     private void btnCsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCsActionPerformed
-
+        calcCs();
     }//GEN-LAST:event_btnCsActionPerformed
 
     private void btnCiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCiActionPerformed

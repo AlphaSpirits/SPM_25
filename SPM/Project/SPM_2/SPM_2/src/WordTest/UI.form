@@ -377,14 +377,16 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="3" attributes="0">
+                      <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="btnCtc" alignment="1" min="-2" pref="32" max="-2" attributes="0"/>
-                          <Component id="btnCi" alignment="3" min="-2" pref="32" max="-2" attributes="0"/>
-                          <Component id="btnCnc" alignment="3" min="-2" pref="32" max="-2" attributes="0"/>
-                          <Component id="btnCi1" alignment="3" min="-2" pref="32" max="-2" attributes="0"/>
-                          <Component id="btnCi2" alignment="3" min="-2" pref="32" max="-2" attributes="0"/>
-                          <Component id="btnCi3" alignment="3" min="-2" pref="32" max="-2" attributes="0"/>
-                          <Component id="btnCs" alignment="3" min="-2" pref="32" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="btnCi" alignment="3" min="-2" pref="32" max="-2" attributes="0"/>
+                              <Component id="btnCnc" alignment="3" min="-2" pref="32" max="-2" attributes="0"/>
+                              <Component id="btnCi1" alignment="3" min="-2" pref="32" max="-2" attributes="0"/>
+                              <Component id="btnCi2" alignment="3" min="-2" pref="32" max="-2" attributes="0"/>
+                              <Component id="btnCi3" alignment="3" min="-2" pref="32" max="-2" attributes="0"/>
+                              <Component id="btnCs" alignment="3" min="-2" pref="32" max="-2" attributes="0"/>
+                          </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
