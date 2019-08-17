@@ -21,7 +21,9 @@ public class UI extends javax.swing.JFrame {
     ArrayList<Integer> lineNumber = new ArrayList<Integer>();
     ArrayList<String> programStatement = new ArrayList<String>();
     ArrayList<Integer> lineComplexity = new ArrayList<Integer>();
-    int maxCases = 0;
+    ArrayList<Integer> ArrCtc = new ArrayList<Integer>();
+    ArrayList<Integer> ArrCnc = new ArrayList<Integer>();
+    int maxCases, testMaxCases = 0;
 
     public UI() {
         initComponents();
@@ -205,6 +207,89 @@ public class UI extends javax.swing.JFrame {
 
         return Ctc;
 
+    }
+
+    public ArrayList<Integer> calCtc() {
+
+        int CtcCounterTest = 0;
+
+        String contentTest = "public class FibonacciMain {\n"
+                + "public static long fibonacci(long number) {\n"
+                + "        if ((number == 0) || (number == 1)) { // base cases\n"
+                + "            return number;\n"
+                + "        } \n"
+                + "		else {\n"
+                + "            // recursion step\n"
+                + "            return fibonacci(number - 1) + fibonacci(number - 2);\n"
+                + "        }\n"
+                + "    }\n"
+                + "public static void main(String args[]) {\n"
+                + "        for (int count = 0; count <= 10; count++) {\n"
+                + "            System.out.println(\"if Fibonacci of \" + count + \" is \"+ fibonacci(count));\n"
+                + "        }\n"
+                + "    }\n"
+                + "}";
+
+        Scanner fileInput = new Scanner(contentTest);
+        while (fileInput.hasNextLine()) {
+            String scannedline = fileInput.nextLine();
+            if (scannedline.contains("System.out.println") || scannedline.contains("\\") || scannedline.startsWith("//") || (scannedline.startsWith("/*")) || scannedline.startsWith("*/")) {
+                CtcCounterTest = 0;
+            } else if (scannedline.contains("if")) {
+                CtcCounterTest = CtcCounterTest + 1;
+                if (scannedline.contains("||")) {
+                    CtcCounterTest = CtcCounterTest + 1;
+                } else if (scannedline.contains("&&")) {
+                    CtcCounterTest = CtcCounterTest + 1;
+                } else if (scannedline.contains("|")) {
+                    CtcCounterTest = CtcCounterTest + 1;
+                } else if (scannedline.contains("&")) {
+                    CtcCounterTest = CtcCounterTest + 1;
+                }
+            } else if (scannedline.contains("for")) {
+                CtcCounterTest = CtcCounterTest + 2;
+                if (scannedline.contains("||")) {
+                    CtcCounterTest = CtcCounterTest + 2;
+                } else if (scannedline.contains("&&")) {
+                    CtcCounterTest = CtcCounterTest + 2;
+                } else if (scannedline.contains("|")) {
+                    CtcCounterTest = CtcCounterTest + 2;
+                } else if (scannedline.contains("&")) {
+                    CtcCounterTest = CtcCounterTest + 2;
+                }
+            } else if (scannedline.contains("while")) {
+                CtcCounterTest = CtcCounterTest + 2;
+                if (scannedline.contains("||")) {
+                    CtcCounterTest = CtcCounterTest + 2;
+                } else if (scannedline.contains("&&")) {
+                    CtcCounterTest = CtcCounterTest + 2;
+                } else if (scannedline.contains("|")) {
+                    CtcCounterTest = CtcCounterTest + 2;
+                } else if (scannedline.contains("&")) {
+                    CtcCounterTest = CtcCounterTest + 2;
+                }
+            } else if (scannedline.contains("do")) {
+                CtcCounterTest = CtcCounterTest + 2;
+                if (scannedline.contains("||")) {
+                    CtcCounterTest = CtcCounterTest + 2;
+                } else if (scannedline.contains("&&")) {
+                    CtcCounterTest = CtcCounterTest + 2;
+                } else if (scannedline.contains("|")) {
+                    CtcCounterTest = CtcCounterTest + 2;
+                } else if (scannedline.contains("&")) {
+                    CtcCounterTest = CtcCounterTest + 2;
+                }
+            } else if (scannedline.contains("catch")) {
+                CtcCounterTest = CtcCounterTest + 1;
+            } else if (scannedline.matches("(\\s+)switch(.*)")) {
+                getSwitchCaseCount();
+                CtcCounterTest = testMaxCases;
+            }
+            ArrCtc.add(CtcCounterTest);
+            CtcCounterTest = 0;
+            testMaxCases = 0;
+        }
+        return ArrCtc;
     }
 
     public ArrayList<Integer> calculateCnc() {
@@ -482,6 +567,47 @@ public class UI extends javax.swing.JFrame {
 
     }
 
+    public ArrayList<Integer> calcCnc() {
+        
+        int Testcurrent_max = 0;  
+        int TestCncCounter = 0;
+        String contentTestCnc = "public class FibonacciMain {\n"
+                + "public static long fibonacci(long number) {\n"
+                + "        if ((number == 0) || (number == 1)) { // base cases\n"
+                + "            return number;\n"
+                + "        } \n"
+                + "		else {\n"
+                + "            // recursion step\n"
+                + "            return fibonacci(number - 1) + fibonacci(number - 2);\n"
+                + "        }\n"
+                + "    }\n"
+                + "public static void main(String args[]) {\n"
+                + "        for (int count = 0; count <= 10; count++) {\n"
+                + "            System.out.println(\"if Fibonacci of \" + count + \" is \"+ fibonacci(count));\n"
+                + "        }\n"
+                + "    }\n"
+                + "}";
+        
+        Scanner fileInput = new Scanner(contentTestCnc);
+        while (fileInput.hasNextLine()) {
+            String scannedline = fileInput.nextLine();
+                if (scannedline.matches("(\\s+)if(.*)") || scannedline.matches("(\\s+)else(.*)") || scannedline.matches("(\\s+)for(.*)")) {
+                    Testcurrent_max++;
+                    if (Testcurrent_max > TestCncCounter) {
+                        TestCncCounter = Testcurrent_max;
+                    }
+                } else if (scannedline.contains("}")) {
+                    if (Testcurrent_max > 0) {
+                        Testcurrent_max--;
+                        TestCncCounter = Testcurrent_max;
+                    }
+                }
+                ArrCnc.add(TestCncCounter);
+            }
+        return ArrCnc;
+    }
+    
+    
     public void viewResult() {
         readFile();
         DefaultTableModel model = (DefaultTableModel) result.getModel();
@@ -885,13 +1011,21 @@ public class UI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCncActionPerformed
 
     private void btnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResetActionPerformed
-
+       
         path.setText(null);
         noOfLines.setText(null);
         uploadedContent.setText(null);
         DefaultTableModel ClearModel = (DefaultTableModel) result.getModel();
         ClearModel.setRowCount(0);
         btnClear.setSelected(true);
+        
+        
+        /*
+        calcCnc();
+        for (int i = 0; i < ArrCnc.size(); i++) {
+            System.out.println(i + 1 + " : " + ArrCnc.get(i).toString());
+        }
+        */
 
     }//GEN-LAST:event_btnResetActionPerformed
 
