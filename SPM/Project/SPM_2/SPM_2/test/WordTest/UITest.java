@@ -1,6 +1,5 @@
 package WordTest;
 
-import com.mycompany.fileupload_1.UI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.junit.After;

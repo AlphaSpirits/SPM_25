@@ -1,4 +1,4 @@
-package com.mycompany.fileupload_1;
+package WordTest;
 
 import java.io.File;
 import java.io.FileInputStream;
