@@ -53,4 +53,16 @@ public class UITest {
         ArrayList<Integer> CncResult = instance.calcCnc();
         assertEquals(expCnc, CncResult);
     }
+    
+     /**
+     * Test of calcCs method, of class UI.
+     */
+   @Test
+   public void testCalcCs() {
+       System.out.println("Test of calcCs method");
+       UI instance = new UI();
+       ArrayList<Integer> expCs = new ArrayList<Integer>(Arrays.asList(1, 4, 8, 1, 0, 0, 0, 9, 0, 0, 4, 10, 13, 0, 0, 0));
+       ArrayList<Integer> CsResult = instance.calculateCs();
+       assertEquals(expCs, CsResult);
+   }
 }
